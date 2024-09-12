@@ -21,9 +21,9 @@ func main() {
 	})
 
 	// Route to handle the form submission and make the API request
-	r.POST("/generate", func(c *gin.Context) {
+	r.GET("/generate", func(c *gin.Context) {
 		// Get the prompt from the form
-		prompt := c.PostForm("prompt")
+		prompt := c.Query("prompt")
 
 		// Call the function to generate the article using the API
 		article, err := generateArticle(prompt)
