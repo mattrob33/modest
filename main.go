@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+    "os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,7 +41,7 @@ func main() {
 	r.LoadHTMLGlob("templates/*")
 
 	// Start the Gin server
-	r.Run(":8080")
+	r.Run(getPort())
 }
 
 // Function to generate the article by calling the API
@@ -104,4 +105,15 @@ func generateArticle(prompt string) (string, error) {
 	}
 
 	return "", fmt.Errorf("No content found")
+}
+
+// Get the Port from the environment so we can run on Heroku
+func getPort() string {
+	var port = os.Getenv("PORT")
+	// Set a default port if there is nothing in the environment
+	if port == "" {
+		port = "8080"
+		fmt.Println("INFO: No PORT environment variable detected, defaulting to " + port)
+	}
+	return ":" + port
 }
