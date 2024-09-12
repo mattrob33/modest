@@ -1,0 +1,107 @@
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	// Route to render the form where user can input a prompt
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
+
+	// Route to handle the form submission and make the API request
+	r.POST("/generate", func(c *gin.Context) {
+		// Get the prompt from the form
+		prompt := c.PostForm("prompt")
+
+		// Call the function to generate the article using the API
+		article, err := generateArticle(prompt)
+		if err != nil {
+			log.Printf("Error generating article: %v", err)
+			c.String(http.StatusInternalServerError, "Error generating article")
+			return
+		}
+
+        // Serve the raw HTML content
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(article))
+	})
+
+	// Load HTML templates
+	r.LoadHTMLGlob("templates/*")
+
+	// Start the Gin server
+	r.Run(":8080")
+}
+
+// Function to generate the article by calling the API
+func generateArticle(prompt string) (string, error) {
+	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyAB22gdjZYFhFdRO3qnSODsXwA-Sz0Qpgw"
+	
+	// Prepare the request body
+	requestBody := map[string]interface{}{
+		"contents": []map[string]interface{}{
+			{
+				"parts": []map[string]string{
+					{"text": "Generate a satirical news article with the following title: `" + prompt + "`. Output in HTML instead of markdown. Style it like a real news website."},
+				},
+			},
+		},
+	}
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return "", fmt.Errorf("Error marshalling JSON: %v", err)
+	}
+
+	// Create and send the request
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("Error creating request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("Error making request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Read and parse the response
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("Error reading response: %v", err)
+	}
+
+	// Parse the response JSON
+	var response struct {
+		Candidates []struct {
+			Content struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"content"`
+		} `json:"candidates"`
+	}
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return "", fmt.Errorf("Error unmarshalling response: %v", err)
+	}
+
+	// Return the generated text
+	if len(response.Candidates) > 0 && len(response.Candidates[0].Content.Parts) > 0 {
+		return response.Candidates[0].Content.Parts[0].Text, nil
+	}
+
+	return "", fmt.Errorf("No content found")
+}
