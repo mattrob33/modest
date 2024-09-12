@@ -12,6 +12,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type SlackResponse struct {
+    ResponseType string `json:"response_type"`
+    Text         string `json:"text"`
+}
+
 func main() {
 	r := gin.Default()
 
@@ -20,8 +25,25 @@ func main() {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
 
+    // Route to handle the form submission and make the API request
+    r.GET("/generate", func(c *gin.Context) {
+        // Get the prompt from the form
+        prompt := c.Query("prompt")
+
+        // Call the function to generate the article using the API
+        article, err := generateArticle(prompt)
+        if err != nil {
+            log.Printf("Error generating article: %v", err)
+            c.String(http.StatusInternalServerError, "Error generating article")
+            return
+        }
+
+        // Serve the raw HTML content
+        c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(article))
+    })
+
 	// Route to handle the form submission and make the API request
-	r.GET("/generate", func(c *gin.Context) {
+	r.GET("/generate-api", func(c *gin.Context) {
 		// Get the prompt from the form
 		prompt := c.Query("prompt")
 
@@ -33,8 +55,12 @@ func main() {
 			return
 		}
 
-        // Serve the raw HTML content
-		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(article))
+	    response := SlackResponse{
+            ResponseType: "in_channel",
+            Text: article,
+        }
+
+        c.JSON(http.StatusOK, response);
 	})
 
 	// Load HTML templates
