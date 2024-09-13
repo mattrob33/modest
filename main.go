@@ -63,6 +63,16 @@ func main() {
         c.JSON(http.StatusOK, response);
 	})
 
+	// Route to handle the form submission and make the API request
+	r.POST("/slack", func(c *gin.Context) {
+		// Get the prompt from the form
+		text := c.FormData("text")
+		command := c.FormData("command")
+		userId := c.FormData("user_id")
+
+		c.String(200, text + " ~ " + command + " ~ " + userId);
+	})
+
 	// Load HTML templates
 	r.LoadHTMLGlob("templates/*")
 
