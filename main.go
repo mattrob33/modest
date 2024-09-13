@@ -48,14 +48,14 @@ func main() {
 		prompt := c.PostForm("text")
 
 		// Call the function to generate the article using the API
-		article, err := generateArticle(prompt)
+		title, err := generateTitle(prompt)
 		if err != nil {
 			log.Printf("Error generating article: %v", err)
 			c.String(http.StatusInternalServerError, "Error generating article")
 			return
 		}
 
-        c.String(http.StatusOK, article);
+        c.String(http.StatusOK, title);
 	})
 
 	// Route to handle the form submission and make the API request
@@ -137,6 +137,70 @@ func generateArticle(prompt string) (string, error) {
 
 	return "", fmt.Errorf("No content found")
 }
+
+// Function to generate the article by calling the API
+func generateTitle(prompt string) (string, error) {
+	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyAB22gdjZYFhFdRO3qnSODsXwA-Sz0Qpgw"
+	
+	// Prepare the request body
+	requestBody := map[string]interface{}{
+		"contents": []map[string]interface{}{
+			{
+				"parts": []map[string]string{
+					{"text": "Generate a subtitle for a satirical news article with the following title: `" + prompt + "`."},
+				},
+			},
+		},
+	}
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return "", fmt.Errorf("Error marshalling JSON: %v", err)
+	}
+
+	// Create and send the request
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("Error creating request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("Error making request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Read and parse the response
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("Error reading response: %v", err)
+	}
+
+	// Parse the response JSON
+	var response struct {
+		Candidates []struct {
+			Content struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"content"`
+		} `json:"candidates"`
+	}
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return "", fmt.Errorf("Error unmarshalling response: %v", err)
+	}
+
+	// Return the generated text
+	if len(response.Candidates) > 0 && len(response.Candidates[0].Content.Parts) > 0 {
+		return response.Candidates[0].Content.Parts[0].Text, nil
+	}
+
+	return "", fmt.Errorf("No content found")
+}
+
 
 // Get the Port from the environment so we can run on Heroku
 func getPort() string {
