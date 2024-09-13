@@ -45,7 +45,7 @@ func main() {
 	// Route to handle the form submission and make the API request
 	r.POST("/generate-api", func(c *gin.Context) {
 		// Get the prompt from the form
-		prompt := c.FormData("text")
+		prompt := c.PostForm("text")
 
 		// Call the function to generate the article using the API
 		article, err := generateArticle(prompt)
@@ -66,11 +66,11 @@ func main() {
 	// Route to handle the form submission and make the API request
 	r.POST("/slack", func(c *gin.Context) {
 		// Get the prompt from the form
-		text := c.FormData("text")
-		command := c.FormData("command")
-		userId := c.FormData("user_id")
+		text := c.PostForm("text")
+		command := c.PostForm("command")
+		userId := c.PostForm("user_id")
 
-		c.String(200, text + " ~ " + command + " ~ " + userId);
+		c.String(200, text + " ~ " + command + " ~ " + userId)
 	})
 
 	// Load HTML templates
