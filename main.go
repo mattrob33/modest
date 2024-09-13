@@ -45,17 +45,17 @@ func main() {
 	// Route to handle the form submission and make the API request
 	r.POST("/generate-api", func(c *gin.Context) {
 		// Get the prompt from the form
-		prompt := c.PostForm("text")
+		title := c.PostForm("text")
 
 		// Call the function to generate the article using the API
-		title, err := generateTitle(prompt)
+		preview, err := generatePreview(title)
 		if err != nil {
 			log.Printf("Error generating article: %v", err)
 			c.String(http.StatusInternalServerError, "Error generating article")
 			return
 		}
 
-        c.String(http.StatusOK, title);
+        c.String(http.StatusOK, title + ": " + preview);
 	})
 
 	// Route to handle the form submission and make the API request
@@ -139,7 +139,7 @@ func generateArticle(prompt string) (string, error) {
 }
 
 // Function to generate the article by calling the API
-func generateTitle(prompt string) (string, error) {
+func generatePreview(prompt string) (string, error) {
 	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyAB22gdjZYFhFdRO3qnSODsXwA-Sz0Qpgw"
 	
 	// Prepare the request body
