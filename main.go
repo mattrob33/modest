@@ -55,12 +55,7 @@ func main() {
 			return
 		}
 
-	    response := SlackResponse{
-            ResponseType: "in_channel",
-            Text: article,
-        }
-
-        c.JSON(http.StatusOK, response);
+        c.String(http.StatusOK, article);
 	})
 
 	// Route to handle the form submission and make the API request
