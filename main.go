@@ -147,7 +147,7 @@ func generateTitle(prompt string) (string, error) {
 		"contents": []map[string]interface{}{
 			{
 				"parts": []map[string]string{
-					{"text": "Generate a subtitle for a satirical news article with the following title: `" + prompt + "`."},
+					{"text": "Return a single title: subtitle combination for a satirical news article with the following title: `" + prompt + "`. Don't give multiple options, just give me one.'"},
 				},
 			},
 		},
