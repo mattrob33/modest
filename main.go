@@ -55,7 +55,7 @@ func main() {
 			return
 		}
 
-        c.String(http.StatusOK, title + ": " + preview);
+        c.String(http.StatusOK, "*" + title + ":* " + preview);
 	})
 
 	// Route to handle the form submission and make the API request
